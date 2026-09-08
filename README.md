@@ -9,8 +9,8 @@ Short requests stay short. Hard ones pick up invariants, scope, anti-workaround 
 OMP 18+.
 
 ```text
-/marketplace add Shadorain/omp-extensions
-/marketplace install prompt-refine@omp-extensions
+/marketplace add Shadorain/omp-prompt-refine
+/marketplace install prompt-refine@omp-prompt-refine
 ```
 
 Restart the session. `/refine` shows up in autocomplete. No extra config. Uses the model already selected.

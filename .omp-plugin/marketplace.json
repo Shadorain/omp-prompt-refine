@@ -1,0 +1,26 @@
+{
+  "name": "omp-prompt-refine",
+  "owner": {
+    "name": "Shadorain"
+  },
+  "metadata": {
+    "description": "Compile a rough OMP prompt before you send it",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "prompt-refine",
+      "description": "Compile a rough prompt before you send it. Never auto-submits.",
+      "version": "1.0.0",
+      "license": "MIT",
+      "homepage": "https://github.com/Shadorain/omp-prompt-refine",
+      "repository": "https://github.com/Shadorain/omp-prompt-refine",
+      "category": "productivity",
+      "keywords": ["omp", "omp-extension", "prompt", "refine"],
+      "author": {
+        "name": "Shadorain"
+      },
+      "source": "./"
+    }
+  ]
+}
