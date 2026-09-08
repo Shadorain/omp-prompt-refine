@@ -4,18 +4,16 @@ You have a rough prompt. `/refine` rewords it so the agent you're about to send 
 
 The result goes back in the editor. You still hit send.
 
-A one-liner stays a one-liner. A vague or overloaded ask gets clearer intent, fewer holes, and language an agent can actually follow.
+A one-liner stays a one-liner. A vague or overloaded ask gets clearer intent with limited context, fewer holes, and language an agent can actually follow.
 
 ## Install
 
-OMP 18+.
+OMP `v18.*`+
 
 ```text
 /marketplace add Shadorain/omp-prompt-refine
 /marketplace install prompt-refine@omp-prompt-refine
 ```
-
-Restart OMP. `/refine` shows up in autocomplete. No extra config. It uses the model you already have selected.
 
 Or clone:
 
@@ -23,7 +21,7 @@ Or clone:
 git clone https://github.com/Shadorain/omp-prompt-refine.git ~/.omp/agent/extensions/prompt-refine
 ```
 
-Restart after that too.
+Restart OMP. `/refine` shows up in autocomplete. No extra config is needed, it uses the model you already have selected.
 
 ## Use
 
@@ -73,13 +71,3 @@ Change what you asked for. Invent extra work. Send the prompt. Touch your repo.
 The rewrite runs in a child session with no tools, shell, MCP, or file writes. Failures and Cancel put the original draft back.
 
 It can peek at a little context so the wording fits the conversation: last few chat turns (no tool dumps), cwd, git branch, and the start of `AGENTS.md` / `CLAUDE.md` / `CONTEXT.md` if those files exist.
-
-## Tests
-
-```bash
-bun test
-```
-
-## License
-
-MIT
