@@ -1,29 +1,27 @@
-export interface IsolatedChildInput {
+import type { CreateAgentSessionOptions } from "@oh-my-pi/pi-coding-agent";
+
+export function isolatedChildOptions(input: {
 	cwd: string;
 	systemPrompt: string;
-	deadlineMs: number;
-}
-
-export function isolatedChildOptions(input: IsolatedChildInput) {
+}): CreateAgentSessionOptions {
 	return {
 		cwd: input.cwd,
 		systemPrompt: input.systemPrompt,
-		toolNames: [] as string[],
+		toolNames: [],
 		restrictToolNames: true,
 		requireYieldTool: false,
 		enableMCP: false,
 		enableLsp: false,
 		enableIrc: false,
 		disableExtensionDiscovery: true,
-		skills: [] as unknown[],
-		rules: [] as unknown[],
-		contextFiles: [] as unknown[],
-		slashCommands: [] as unknown[],
-		promptTemplates: [] as unknown[],
-		customTools: [] as unknown[],
+		skills: [],
+		rules: [],
+		contextFiles: [],
+		slashCommands: [],
+		promptTemplates: [],
+		customTools: [],
 		hasUI: false,
 		spawns: "",
 		skipPythonPreflight: true,
-		deadlineMs: input.deadlineMs,
 	};
 }

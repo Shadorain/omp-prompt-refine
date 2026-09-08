@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import type { ExtensionAPI, ExtensionCommandContext } from "@oh-my-pi/pi-coding-agent";
+import type { ExtensionAPI, ExtensionContext } from "@oh-my-pi/pi-coding-agent";
 import { draftFromEditor, parseRefineArgs, refineArgumentCompletions } from "./commands.ts";
 import { buildContextPacket } from "./context.ts";
 import { resolveCriticModel, resolveRefinerModel } from "./models.ts";
@@ -15,7 +15,7 @@ const PROJECT_SNIPPET_CHARS = 2000;
 export default function promptRefinerExtension(pi: ExtensionAPI) {
 	pi.setLabel("Prompt refiner");
 
-	async function runRefine(args: string, ctx: ExtensionCommandContext) {
+	async function runRefine(args: string, ctx: ExtensionContext) {
 		const parsed = parseRefineArgs(args);
 		if (!parsed.ok) {
 			ctx.ui.notify(parsed.error, "error");
@@ -92,20 +92,18 @@ export default function promptRefinerExtension(pi: ExtensionAPI) {
 		getArgumentCompletions: (prefix) => refineArgumentCompletions(prefix),
 		handler: async (args, ctx) => {
 			await runRefine(args, ctx);
-			return false;
 		},
 	});
 
 	pi.registerShortcut("alt+shift+r", {
 		description: "Reword the current editor draft for the agent",
 		handler: async (ctx) => {
-			await runRefine("", ctx as ExtensionCommandContext);
-			return false;
+			await runRefine("", ctx);
 		},
 	});
 }
 
-async function infer(ctx: ExtensionCommandContext, request: IsolatedRunRequest): Promise<string> {
+async function infer(ctx: ExtensionContext, request: IsolatedRunRequest): Promise<string> {
 	const spec = `${request.model.provider}/${request.model.id}`;
 	const live = ctx.models.resolve(spec);
 	if (!live) throw new Error(`Model "${spec}" is not available.`);
@@ -141,7 +139,7 @@ function readProjectSnippets(cwd: string): ProjectSnippet[] {
 			const text = readFileSync(path, "utf8").slice(0, PROJECT_SNIPPET_CHARS).trim();
 			if (text) snippets.push({ path: name, text });
 		} catch {
-			// Supporting context only; skip unreadable files.
+			continue;
 		}
 	}
 	return snippets;

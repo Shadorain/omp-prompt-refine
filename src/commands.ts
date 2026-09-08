@@ -57,7 +57,6 @@ export function parseRefineArgs(args: string): ParsedRefineArgs {
 	return parsed;
 }
 
-/** Editor text may still start with `/refine …`. Strip that line so it is not compiled. */
 export function draftFromEditor(text: string): ParsedRefineArgs {
 	const trimmed = text.replace(/^\uFEFF/, "").replace(/\s+$/, "");
 	const newline = trimmed.search(/\r?\n/);

@@ -3,32 +3,31 @@ import {
 	createAgentSession,
 	SessionManager,
 	Settings,
+	type ExtensionContext,
 } from "@oh-my-pi/pi-coding-agent";
 import { isolatedChildOptions } from "./isolation.ts";
 import { RefineCancelledError, type IsolatedRunRequest } from "./types.ts";
 
-export interface IsolatedInferenceHost {
+export type IsolatedInferenceHost = {
 	cwd: string;
-	authStorage: unknown;
-	modelRegistry: unknown;
-	model: unknown;
-}
+	authStorage: ExtensionContext["modelRegistry"]["authStorage"];
+	modelRegistry: ExtensionContext["modelRegistry"];
+	model: NonNullable<ExtensionContext["model"]>;
+};
 
 export async function runIsolatedInference(
 	host: IsolatedInferenceHost,
 	request: IsolatedRunRequest,
 ): Promise<string> {
 	if (request.signal?.aborted) throw new RefineCancelledError();
-	const isolated = isolatedChildOptions({
-		cwd: host.cwd,
-		systemPrompt: request.systemPrompt,
-		deadlineMs: request.deadlineMs,
-	});
 	const { session } = await createAgentSession({
-		...isolated,
-		authStorage: host.authStorage as never,
-		modelRegistry: host.modelRegistry as never,
-		model: host.model as never,
+		...isolatedChildOptions({
+			cwd: host.cwd,
+			systemPrompt: request.systemPrompt,
+		}),
+		authStorage: host.authStorage,
+		modelRegistry: host.modelRegistry,
+		model: host.model,
 		sessionManager: SessionManager.inMemory(),
 		settings: Settings.isolated({
 			"advisor.enabled": false,
@@ -79,4 +78,3 @@ export function lastAssistantText(messages: Array<{ role?: string; content?: unk
 	}
 	return "";
 }
-

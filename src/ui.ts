@@ -107,7 +107,6 @@ export function previewActionTitle(result: RefineResult, source: string): string
 	].join("\n");
 }
 
-/** Returns whether the host should treat the result as submitted. Always false. */
 export async function presentRefineResult(
 	ctx: PresentContext,
 	result: RefineResult,

@@ -6,7 +6,6 @@ describe("isolatedChildOptions", () => {
 		const options = isolatedChildOptions({
 			cwd: "/tmp/project",
 			systemPrompt: "refine",
-			deadlineMs: 90_000,
 		});
 
 		expect(options.toolNames).toEqual([]);
