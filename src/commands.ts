@@ -85,19 +85,19 @@ export function refineArgumentCompletions(prefix: string): {
 		{
 			value: "",
 			label: "[prompt]",
-			description: "Optional. Empty refines the editor draft",
+			description: "Optional. Empty rewords the editor draft",
 			hint: "[prompt]",
 		},
 		{
 			value: "--light",
 			label: "--light",
-			description: "Clarify without expanding a simple prompt",
+			description: "Say it more clearly. Keep it short",
 			hint: " [prompt]",
 		},
 		{
 			value: "--deep",
 			label: "--deep",
-			description: "Adversarial two-stage refinement",
+			description: "Find ways an agent could miss the point, then rewrite",
 			hint: " [prompt]",
 		},
 		{

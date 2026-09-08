@@ -4,13 +4,13 @@
     "name": "Shadorain"
   },
   "metadata": {
-    "description": "Compile a rough OMP prompt before you send it",
+    "description": "Reword a rough prompt so the agent is more likely to do what you meant",
     "version": "1.0.0"
   },
   "plugins": [
     {
       "name": "prompt-refine",
-      "description": "Compile a rough prompt before you send it. Never auto-submits.",
+      "description": "Reword a rough prompt so the agent is more likely to do what you meant.",
       "version": "1.0.0",
       "license": "MIT",
       "homepage": "https://github.com/Shadorain/omp-prompt-refine",

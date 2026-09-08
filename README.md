@@ -1,10 +1,10 @@
 # omp-prompt-refine
 
-Type a rough prompt. Press `Alt+Shift+R`. A tighter version lands back in the editor.
+You have a rough prompt. `/refine` rewords it so the agent you're about to send it to is more likely to do what you meant.
 
-Nothing is sent until you send it.
+The result goes back in the editor. You still hit send.
 
-Short requests stay short. `make this button blue` should come back almost as-is. A messy architecture or research ask should pick up the constraints an agent will otherwise dodge.
+A one-liner stays a one-liner. A vague or overloaded ask gets clearer intent, fewer holes, and language an agent can actually follow.
 
 ## Install
 
@@ -15,9 +15,9 @@ OMP 18+.
 /marketplace install prompt-refine@omp-prompt-refine
 ```
 
-Restart OMP. `/refine` shows up in autocomplete. No extra config. It uses whatever model you already have selected.
+Restart OMP. `/refine` shows up in autocomplete. No extra config. It uses the model you already have selected.
 
-Prefer a clone?
+Or clone:
 
 ```bash
 git clone https://github.com/Shadorain/omp-prompt-refine.git ~/.omp/agent/extensions/prompt-refine
@@ -36,16 +36,16 @@ Or put the command on the first line:
 rewrite the onboarding email so it does not promise a feature we have not shipped
 ```
 
-You get Apply, Edit, or Cancel. Apply puts the compiled prompt in the composer. You still hit send.
+Apply, Edit, or Cancel. Apply drops the reworded prompt into the composer. Then you send it.
 
-Don't submit `/refine` as the only line in the composer. That clears the editor first. Use the shortcut, or the two-line form.
+Don't submit `/refine` as the only line. That clears the editor first. Use the shortcut, or the two-line form.
 
 `Alt+R` is OMP's retry key, so this uses `Alt+Shift+R`.
 
 ```text
-/refine              adaptive. adds structure only when the draft needs it
-/refine --light      clarity. keep it short
-/refine --deep       a critic pass, then a compiler pass
+/refine              reword it, add structure only if the draft needs it
+/refine --light      just say it more clearly. keep it short
+/refine --deep       look for ways an agent could miss the point, then rewrite
 /refine --model @slow
 ```
 
@@ -55,7 +55,7 @@ Text after the flags is the draft. No text means "use what's in the editor."
 
 `--model` wins. Otherwise `@prompt_refiner` / `prompt_refiner`. Otherwise the current session model.
 
-Deep mode's critic: `@prompt_critic` / `prompt_critic`, else the same model as the compiler.
+Deep mode's critic: `@prompt_critic` / `prompt_critic`, else the same model as the rewrite.
 
 ```yaml
 # ~/.omp/agent/config.yml
@@ -68,11 +68,11 @@ modelRoles:
 
 ## What it won't do
 
-Invent requirements. Widen scope. Auto-send. Edit your repo.
+Change what you asked for. Invent extra work. Send the prompt. Touch your repo.
 
-The child session has no tools, shell, MCP, or file writes. Failures and Cancel restore the original draft.
+The rewrite runs in a child session with no tools, shell, MCP, or file writes. Failures and Cancel put the original draft back.
 
-It does send a small context packet to the model you already use: the draft, the last few chat turns (no tool dumps), cwd, git branch, and the start of `AGENTS.md` / `CLAUDE.md` / `CONTEXT.md` if those files exist.
+It can peek at a little context so the wording fits the conversation: last few chat turns (no tool dumps), cwd, git branch, and the start of `AGENTS.md` / `CLAUDE.md` / `CONTEXT.md` if those files exist.
 
 ## Tests
 

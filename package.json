@@ -1,7 +1,7 @@
 {
   "name": "omp-prompt-refine",
   "version": "1.0.0",
-  "description": "OMP extension that compiles a rough prompt into a stronger one without sending it.",
+  "description": "Reword a rough prompt so the agent is more likely to do what you meant.",
   "type": "module",
   "license": "MIT",
   "author": "Shadorain",

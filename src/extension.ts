@@ -88,7 +88,7 @@ export default function promptRefinerExtension(pi: ExtensionAPI) {
 	}
 
 	pi.registerCommand("refine", {
-		description: "Compile the editor draft or /refine args into a stronger prompt without sending it",
+		description: "Reword the draft so the agent is more likely to do what you meant",
 		getArgumentCompletions: (prefix) => refineArgumentCompletions(prefix),
 		handler: async (args, ctx) => {
 			await runRefine(args, ctx);
@@ -97,7 +97,7 @@ export default function promptRefinerExtension(pi: ExtensionAPI) {
 	});
 
 	pi.registerShortcut("alt+shift+r", {
-		description: "Refine the current editor draft without sending it",
+		description: "Reword the current editor draft for the agent",
 		handler: async (ctx) => {
 			await runRefine("", ctx as ExtensionCommandContext);
 			return false;
