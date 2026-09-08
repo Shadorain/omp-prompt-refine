@@ -25,78 +25,27 @@ Restart OMP. `/refine` shows up in autocomplete. No extra config is needed, it u
 
 ## Use
 
-Leave the draft in the editor and press `Alt+Shift+R`.
-
-Or put the command on the first line:
+Leave the draft in the editor and press `Alt+Shift+R`. Or put the command on the first line:
 
 ```text
 /refine --deep
 rewrite the onboarding email so it does not promise a feature we have not shipped
 ```
 
-Apply, Edit, or Cancel. Apply drops the reworded prompt into the composer. Then you send it.
+Apply puts the rewrite in the composer. You still send it.
 
-Don't submit `/refine` as the only line. That clears the editor first. Use the shortcut, or the two-line form.
-
-`Alt+R` is OMP's retry key, so this uses `Alt+Shift+R`.
-
-Text after the flags is the draft. No text means "use what's in the editor."
-
-## Flags
+Don't submit `/refine` as the only line. That clears the editor. Shortcut or two-line form. `Alt+R` is retry, so this is `Alt+Shift+R`.
 
 ```text
-/refine
+/refine                 editor draft
+/refine --light ...     keep it short
+/refine --deep ...      find ways an agent could miss
+/refine --model @slow   this run only
+/refine --no-context    skip chat and project files
+/refine --last          previous user message
+/refine --undo          restore pre-Apply draft
+/refine --setup         default models and extra files
 ```
-
-Reword the editor draft. Add structure only if the draft needs it.
-
-```text
-/refine --light
-/refine --light make this button blue
-```
-
-Say it more clearly. Keep it short. A one-liner stays a one-liner.
-
-```text
-/refine --deep
-/refine --deep redesign auth so sessions cannot be stolen by swapping the cookie store
-```
-
-Look for ways an agent could miss the point, then rewrite. Optional critic model if you set one.
-
-```text
-/refine --model @slow
-/refine --model provider/id --deep
-```
-
-Use this model for this run. Autocomplete lists models this session can actually run, plus `@prompt_refiner` and `@prompt_critic`. Same strings OMP uses elsewhere.
-
-```text
-/refine --no-context
-/refine --deep --no-context
-```
-
-Refine the draft only. Skip recent chat, git branch, and project files.
-
-```text
-/refine --last
-```
-
-Reword the previous user message, not the editor. Skips a prior `/refine` line. Do not pass extra prompt text.
-
-```text
-/refine --undo
-```
-
-Put the pre-Apply draft back. Apply and Edit stash it. No other flags.
-
-```text
-/refine --setup
-```
-
-Pick a default refiner, an optional critic, and extra context files. Writes `~/.omp/agent/prompt-refine.json`. No other flags.
-
-`--light` and `--deep` cannot be combined. `--undo`, `--setup`, and `--last` cannot take a prompt. `--model` and `--no-context` mix with `--light` or `--deep`.
 
 ## Optional models
 
