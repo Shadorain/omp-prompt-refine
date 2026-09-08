@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { buildContextPacket, extractAnchors, missingAnchors } from "../src/context.ts";
+import { buildContextPacket, extractAnchors, lastUserDraft, missingAnchors } from "../src/context.ts";
 
 const user = (text: string) => ({
 	type: "message" as const,
@@ -53,6 +53,23 @@ describe("buildContextPacket", () => {
 			maxTotalChars: 200,
 		});
 		expect(packet.recent[0]?.text.length).toBeLessThanOrEqual(80);
+	});
+});
+
+describe("lastUserDraft", () => {
+	test("returns the latest user turn, skipping /refine itself", () => {
+		const text = lastUserDraft([
+			user("first ask"),
+			assistant("ok"),
+			user("the real request"),
+			assistant("working"),
+			user("/refine --deep"),
+		]);
+		expect(text).toBe("the real request");
+	});
+
+	test("returns undefined when there is no prior user turn", () => {
+		expect(lastUserDraft([assistant("hello"), user("/refine")])).toBeUndefined();
 	});
 });
 

@@ -39,6 +39,7 @@ export async function runIsolatedInference(
 		agentDisplayName: "prompt-refiner",
 		agentRegistry: new AgentRegistry(),
 		deadline: Date.now() + request.deadlineMs,
+		...(request.thinkingLevel ? { thinkingLevel: request.thinkingLevel } : {}),
 	});
 
 	const abortChild = () => {

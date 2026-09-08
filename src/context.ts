@@ -99,6 +99,20 @@ export function missingAnchors(draft: string, refined: string): string[] {
 	return extractAnchors(draft).filter((anchor) => !refined.includes(anchor));
 }
 
+export function lastUserDraft(entries: SessionLikeEntry[]): string | undefined {
+	for (let i = entries.length - 1; i >= 0; i--) {
+		const entry = entries[i];
+		if (entry.type && entry.type !== "message") continue;
+		if (entry.message?.role !== "user") continue;
+		const text = messageText(entry.message.content);
+		if (!text) continue;
+		const first = text.split(/\r?\n/, 1)[0]?.trim() ?? "";
+		if (/^\/refine(?:\s|$)/.test(first)) continue;
+		return text;
+	}
+	return undefined;
+}
+
 function messageText(content: unknown): string {
 	if (typeof content === "string") return content.trim();
 	if (!Array.isArray(content)) return "";

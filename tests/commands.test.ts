@@ -84,6 +84,35 @@ describe("parseRefineArgs", () => {
 		expect(result.ok).toBe(false);
 		if (!result.ok) expect(result.error).toContain("--model");
 	});
+
+	test("parses --no-context", () => {
+		const result = parseRefineArgs("--no-context ship it");
+		expect(result).toMatchObject({ ok: true, noContext: true, prompt: "ship it" });
+	});
+
+	test("parses --last without a prompt", () => {
+		const result = parseRefineArgs("--last");
+		expect(result).toMatchObject({ ok: true, last: true, prompt: "" });
+	});
+
+	test("rejects --last with extra prompt text", () => {
+		const result = parseRefineArgs("--last also this");
+		expect(result.ok).toBe(false);
+		if (!result.ok) expect(result.error).toContain("--last");
+	});
+
+	test("parses --undo alone", () => {
+		expect(parseRefineArgs("--undo")).toEqual({ ok: true, action: "undo" });
+	});
+
+	test("parses --setup alone", () => {
+		expect(parseRefineArgs("--setup")).toEqual({ ok: true, action: "setup" });
+	});
+
+	test("rejects --undo mixed with other flags", () => {
+		const result = parseRefineArgs("--undo --light");
+		expect(result.ok).toBe(false);
+	});
 });
 
 describe("draftFromEditor", () => {
@@ -115,10 +144,18 @@ describe("refineArgumentCompletions", () => {
 			label: "[prompt]",
 		});
 		expect(items[0]?.hint).toBeTruthy();
-		expect(items.map((item) => item.value)).toEqual(["", "--light", "--deep", "--model"]);
+		expect(items.map((item) => item.value)).toEqual([
+			"",
+			"--light",
+			"--deep",
+			"--model",
+			"--no-context",
+			"--last",
+			"--undo",
+			"--setup",
+		]);
 		for (const item of items.slice(1)) {
 			expect(item.label).toContain(item.value);
-			expect(item.hint).toContain("[prompt]");
 		}
 	});
 
@@ -133,5 +170,23 @@ describe("refineArgumentCompletions", () => {
 
 	test("filters by flag prefix and hides the placeholder", () => {
 		expect(refineArgumentCompletions("--d").map((item) => item.value)).toEqual(["--deep"]);
+	});
+
+	test("after --model, lists live model specs", () => {
+		const values = refineArgumentCompletions("--model ", [
+			"google-antigravity/gemini-flash",
+			"anthropic/claude-sonnet-5",
+		]).map((item) => item.value);
+		expect(values).toContain("--model google-antigravity/gemini-flash");
+		expect(values).toContain("--model anthropic/claude-sonnet-5");
+		expect(values).toContain("--model @prompt_refiner");
+	});
+
+	test("filters --model values by the partial spec", () => {
+		const values = refineArgumentCompletions("--model gem", [
+			"google-antigravity/gemini-flash",
+			"anthropic/claude-sonnet-5",
+		]).map((item) => item.value);
+		expect(values).toEqual(["--model google-antigravity/gemini-flash"]);
 	});
 });

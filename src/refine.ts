@@ -52,7 +52,19 @@ export async function compilePrompt(args: CompileArgs): Promise<RefineResult> {
 		deadlineMs: args.mode === "light" ? LIGHT_DEADLINE_MS : DEFAULT_DEADLINE_MS,
 	});
 
-	const result = parseRefineResult(raw);
+	let result: RefineResult;
+	try {
+		result = parseRefineResult(raw);
+	} catch (error) {
+		if (!(error instanceof Error) || error.message !== "Refiner did not return JSON.") throw error;
+		const retry = await args.run({
+			model: args.compiler.model,
+			systemPrompt: compilerSystemPrompt(args.mode),
+			userPrompt: `${compilerInput}\n\nReturn JSON only. Shape: {"prompt":"...","notes":["..."]}. No prose.`,
+			deadlineMs: args.mode === "light" ? LIGHT_DEADLINE_MS : DEFAULT_DEADLINE_MS,
+		});
+		result = parseRefineResult(retry);
+	}
 	const dropped = missingAnchors(draft, result.prompt);
 	if (dropped.length > 0) {
 		result.notes.push(`Preserved-token check: missing ${dropped.join(", ")}`);

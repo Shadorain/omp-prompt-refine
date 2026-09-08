@@ -111,11 +111,13 @@ export async function presentRefineResult(
 	ctx: PresentContext,
 	result: RefineResult,
 	source: string,
+	onApplied?: (original: string) => void,
 ): Promise<false> {
 	const original = ctx.ui.getEditorText();
 	const preview = previewActionTitle(result, source);
 
 	if (!ctx.hasUI) {
+		onApplied?.(original);
 		ctx.ui.setEditorText(result.prompt);
 		ctx.ui.notify(preview, "info");
 		return false;
@@ -124,6 +126,7 @@ export async function presentRefineResult(
 	ctx.ui.notify(`Prompt refined using ${source}`, "info");
 	const choice = await ctx.ui.select(preview, ["Apply", "Edit", "Cancel"]);
 	if (choice === "Apply") {
+		onApplied?.(original);
 		ctx.ui.setEditorText(result.prompt);
 		return false;
 	}
@@ -133,6 +136,7 @@ export async function presentRefineResult(
 			if (ctx.ui.getEditorText() !== original) ctx.ui.setEditorText(original);
 			return false;
 		}
+		onApplied?.(original);
 		ctx.ui.setEditorText(edited);
 		return false;
 	}

@@ -76,6 +76,20 @@ describe("resolveRefinerModel", () => {
 			error: "No model available. Configure modelRoles.prompt_refiner or select a session model.",
 		});
 	});
+
+	test("configured model is used when the role is absent", () => {
+		const result = resolveRefinerModel(query({ "google/flash": current }, current), undefined, "google/flash");
+		expect(result).toEqual({ model: current, source: "google/flash" });
+	});
+
+	test("role still beats a configured model", () => {
+		const result = resolveRefinerModel(
+			query({ "@prompt_refiner": sonnet, "google/flash": current }, current),
+			undefined,
+			"google/flash",
+		);
+		expect(result).toEqual({ model: sonnet, source: "@prompt_refiner" });
+	});
 });
 
 describe("resolveCriticModel", () => {
@@ -87,5 +101,10 @@ describe("resolveCriticModel", () => {
 	test("falls back to the compiler model when critic role is absent", () => {
 		const result = resolveCriticModel(query({}), sonnet);
 		expect(result).toEqual({ model: sonnet, source: "compiler" });
+	});
+
+	test("configured critic is used when the role is absent", () => {
+		const result = resolveCriticModel(query({ "google/flash": current }), sonnet, "google/flash");
+		expect(result).toEqual({ model: current, source: "google/flash" });
 	});
 });

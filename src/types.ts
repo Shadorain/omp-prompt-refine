@@ -44,6 +44,7 @@ export interface IsolatedRunRequest {
 	userPrompt: string;
 	deadlineMs: number;
 	signal?: AbortSignal;
+	thinkingLevel?: string;
 }
 
 export class RefineCancelledError extends Error {

@@ -83,6 +83,20 @@ describe("presentRefineResult", () => {
 		expect(ctx.editorText).toBe("REFINED PROMPT");
 	});
 
+	test("Apply reports the original text so it can be undone", async () => {
+		const originals: string[] = [];
+		const ctx = mockUi({ select: "Apply" });
+		await presentRefineResult(ctx, refined, "@prompt_refiner", (original) => originals.push(original));
+		expect(originals).toEqual(["ORIGINAL DRAFT"]);
+	});
+
+	test("Cancel does not report an undo original", async () => {
+		const originals: string[] = [];
+		const ctx = mockUi({ select: "Cancel" });
+		await presentRefineResult(ctx, refined, "@prompt_refiner", (original) => originals.push(original));
+		expect(originals).toEqual([]);
+	});
+
 	test("Cancel leaves the original editor text", async () => {
 		const ctx = mockUi({ select: "Cancel" });
 		await presentRefineResult(ctx, refined, "@prompt_refiner");

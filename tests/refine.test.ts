@@ -84,4 +84,40 @@ describe("compilePrompt", () => {
 			}),
 		).rejects.toThrow(/nothing to refine/i);
 	});
+
+	test("retries once when the compiler returns prose instead of JSON", async () => {
+		const bodies: string[] = [];
+		const run: IsolatedRun = async ({ userPrompt }) => {
+			bodies.push(userPrompt);
+			if (bodies.length === 1) return "Here is a nicer prompt without JSON.";
+			return JSON.stringify({ prompt: "Make the button blue.", notes: ["Clarified the color change"] });
+		};
+		const result = await compilePrompt({
+			mode: "default",
+			draft: "make the button blue",
+			packet: { draft: "make the button blue", cwd: "/tmp", recent: [], project: [] },
+			compiler: { model, source: "current" },
+			run,
+		});
+		expect(bodies).toHaveLength(2);
+		expect(bodies[1]).toContain("JSON");
+		expect(result.prompt).toBe("Make the button blue.");
+	});
+
+	test("does not retry an empty prompt", async () => {
+		let calls = 0;
+		await expect(
+			compilePrompt({
+				mode: "default",
+				draft: "make the button blue",
+				packet: { draft: "make the button blue", cwd: "/tmp", recent: [], project: [] },
+				compiler: { model, source: "current" },
+				run: async () => {
+					calls += 1;
+					return JSON.stringify({ prompt: "   ", notes: [] });
+				},
+			}),
+		).rejects.toThrow(/empty prompt/i);
+		expect(calls).toBe(1);
+	});
 });
