@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { ExtensionAPI, ExtensionCommandContext } from "@oh-my-pi/pi-coding-agent";
-import { parseRefineArgs, refineArgumentCompletions } from "./commands.ts";
+import { draftFromEditor, parseRefineArgs, refineArgumentCompletions } from "./commands.ts";
 import { buildContextPacket } from "./context.ts";
 import { resolveCriticModel, resolveRefinerModel } from "./models.ts";
 import { compilePrompt } from "./refine.ts";
@@ -23,7 +23,21 @@ export default function promptRefinerExtension(pi: ExtensionAPI) {
 		}
 
 		const original = ctx.ui.getEditorText();
-		const draft = parsed.prompt || original.trim();
+		let draft = parsed.prompt;
+		let mode = parsed.mode;
+		let model = parsed.model;
+		if (!draft) {
+			const peeled = draftFromEditor(original);
+			if (!peeled.ok) {
+				ctx.ui.notify(peeled.error, "error");
+				return;
+			}
+			draft = peeled.prompt;
+			if (!args.trim()) {
+				mode = peeled.mode;
+				model = peeled.model;
+			}
+		}
 		if (!draft) {
 			ctx.ui.notify(
 				"Nothing to refine. Pass a prompt, put /refine on the first line of the draft, or press Alt+Shift+R while the draft is in the editor.",
@@ -32,7 +46,7 @@ export default function promptRefinerExtension(pi: ExtensionAPI) {
 			return;
 		}
 
-		const compiler = resolveRefinerModel(ctx.models, parsed.model);
+		const compiler = resolveRefinerModel(ctx.models, model);
 		if ("error" in compiler) {
 			ctx.ui.notify(compiler.error, "error");
 			return;
@@ -50,11 +64,11 @@ export default function promptRefinerExtension(pi: ExtensionAPI) {
 				projectSnippets: readProjectSnippets(ctx.cwd),
 			});
 			const result = await compilePrompt({
-				mode: parsed.mode,
+				mode,
 				draft,
 				packet,
 				compiler,
-				critic: parsed.mode === "deep" ? resolveCriticModel(ctx.models, compiler.model) : undefined,
+				critic: mode === "deep" ? resolveCriticModel(ctx.models, compiler.model) : undefined,
 				run: (request) => infer(ctx, { ...request, signal: cancel.signal }),
 			});
 			if (cancel.signal.aborted) throw new RefineCancelledError();
@@ -76,20 +90,24 @@ export default function promptRefinerExtension(pi: ExtensionAPI) {
 	pi.registerCommand("refine", {
 		description: "Compile the editor draft or /refine args into a stronger prompt without sending it",
 		getArgumentCompletions: (prefix) => refineArgumentCompletions(prefix),
-		handler: runRefine,
+		handler: async (args, ctx) => {
+			await runRefine(args, ctx);
+			return false;
+		},
 	});
 
 	pi.registerShortcut("alt+shift+r", {
 		description: "Refine the current editor draft without sending it",
 		handler: async (ctx) => {
 			await runRefine("", ctx as ExtensionCommandContext);
+			return false;
 		},
 	});
 }
 
 async function infer(ctx: ExtensionCommandContext, request: IsolatedRunRequest): Promise<string> {
 	const spec = `${request.model.provider}/${request.model.id}`;
-	const live = ctx.models.resolve(spec) ?? ctx.models.current() ?? ctx.model;
+	const live = ctx.models.resolve(spec);
 	if (!live) throw new Error(`Model "${spec}" is not available.`);
 	return runIsolatedInference(
 		{

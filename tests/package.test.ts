@@ -17,11 +17,12 @@ describe("publishable OMP extension package", () => {
 		expect(pkg.name).toBe("omp-prompt-refine");
 		expect(pkg.license).toBe("MIT");
 		expect(pkg.omp?.extensions).toEqual(["./index.ts"]);
-		expect(pkg.files).toEqual(expect.arrayContaining(["index.ts", "src", "README.md", "LICENSE"]));
-		expect(pkg.keywords).toEqual(expect.arrayContaining(["omp", "extension"]));
+		expect(pkg.files).toEqual(expect.arrayContaining(["index.ts", "src", "README.md", "LICENSE", ".omp-plugin"]));
+		expect(pkg.keywords).toEqual(expect.arrayContaining(["omp", "extension", "omp-extension"]));
 		expect(pkg.peerDependencies?.["@oh-my-pi/pi-coding-agent"]).toBeDefined();
 		expect(existsSync(join(root, "LICENSE"))).toBe(true);
 		expect(existsSync(join(root, "index.ts"))).toBe(true);
 		expect(existsSync(join(root, "README.md"))).toBe(true);
+		expect(existsSync(join(root, ".omp-plugin", "marketplace.json"))).toBe(true);
 	});
 });

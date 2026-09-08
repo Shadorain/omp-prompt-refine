@@ -6,6 +6,7 @@ import {
 } from "@oh-my-pi/pi-coding-agent";
 import { isolatedChildOptions } from "./isolation.ts";
 import { RefineCancelledError, type IsolatedRunRequest } from "./types.ts";
+
 export interface IsolatedInferenceHost {
 	cwd: string;
 	authStorage: unknown;
@@ -24,27 +25,10 @@ export async function runIsolatedInference(
 		deadlineMs: request.deadlineMs,
 	});
 	const { session } = await createAgentSession({
-		cwd: isolated.cwd,
+		...isolated,
 		authStorage: host.authStorage as never,
 		modelRegistry: host.modelRegistry as never,
 		model: host.model as never,
-		systemPrompt: isolated.systemPrompt,
-		hasUI: false,
-		enableLsp: false,
-		enableMCP: false,
-		enableIrc: false,
-		skipPythonPreflight: true,
-		disableExtensionDiscovery: true,
-		toolNames: [],
-		restrictToolNames: true,
-		requireYieldTool: false,
-		customTools: [],
-		skills: [],
-		rules: [],
-		contextFiles: [],
-		promptTemplates: [],
-		slashCommands: [],
-		spawns: "",
 		sessionManager: SessionManager.inMemory(),
 		settings: Settings.isolated({
 			"advisor.enabled": false,

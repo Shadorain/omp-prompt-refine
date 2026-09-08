@@ -18,13 +18,15 @@
     "oh-my-pi",
     "pi-coding-agent",
     "extension",
+    "omp-extension",
     "prompt"
   ],
   "files": [
     "index.ts",
     "src",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    ".omp-plugin"
   ],
   "exports": {
     ".": "./index.ts"

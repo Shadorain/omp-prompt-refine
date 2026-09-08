@@ -57,6 +57,24 @@ export function parseRefineArgs(args: string): ParsedRefineArgs {
 	return parsed;
 }
 
+/** Editor text may still start with `/refine …`. Strip that line so it is not compiled. */
+export function draftFromEditor(text: string): ParsedRefineArgs {
+	const trimmed = text.replace(/^\uFEFF/, "").replace(/\s+$/, "");
+	const newline = trimmed.search(/\r?\n/);
+	const first = (newline === -1 ? trimmed : trimmed.slice(0, newline)).trim();
+	const rest = newline === -1 ? "" : trimmed.slice(newline).replace(/^\r?\n/, "");
+	const match = first.match(/^\/refine(?:\s+(.*))?$/);
+	if (!match) {
+		return { ok: true, mode: "default", prompt: trimmed.trim() };
+	}
+	const parsed = parseRefineArgs(match[1] ?? "");
+	if (!parsed.ok) return parsed;
+	const prompt = [parsed.prompt, rest].filter((part) => part.trim()).join("\n").trim();
+	const result: ParsedRefineArgs = { ok: true, mode: parsed.mode, prompt };
+	if (parsed.model) result.model = parsed.model;
+	return result;
+}
+
 export function refineArgumentCompletions(prefix: string): {
 	value: string;
 	label: string;

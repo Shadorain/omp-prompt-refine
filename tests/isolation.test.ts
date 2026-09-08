@@ -5,7 +5,6 @@ describe("isolatedChildOptions", () => {
 	test("disables mutation tools, MCP, LSP, extensions, and skills", () => {
 		const options = isolatedChildOptions({
 			cwd: "/tmp/project",
-			model: { provider: "anthropic", id: "claude-sonnet-5" },
 			systemPrompt: "refine",
 			deadlineMs: 90_000,
 		});

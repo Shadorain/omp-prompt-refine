@@ -2,7 +2,6 @@ export interface IsolatedChildInput {
 	cwd: string;
 	systemPrompt: string;
 	deadlineMs: number;
-	model?: unknown;
 }
 
 export function isolatedChildOptions(input: IsolatedChildInput) {

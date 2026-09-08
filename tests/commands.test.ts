@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { parseRefineArgs, refineArgumentCompletions } from "../src/commands.ts";
+import { draftFromEditor, parseRefineArgs, refineArgumentCompletions } from "../src/commands.ts";
 
 describe("parseRefineArgs", () => {
 	test("bare args are the prompt in default mode", () => {
@@ -83,6 +83,27 @@ describe("parseRefineArgs", () => {
 		const result = parseRefineArgs("--model");
 		expect(result.ok).toBe(false);
 		if (!result.ok) expect(result.error).toContain("--model");
+	});
+});
+
+describe("draftFromEditor", () => {
+	test("strips a leading /refine line and keeps the body", () => {
+		const result = draftFromEditor("/refine --deep\nrewrite the onboarding email");
+		expect(result).toEqual({
+			ok: true,
+			mode: "deep",
+			prompt: "rewrite the onboarding email",
+		});
+	});
+
+	test("plain editor text is the prompt", () => {
+		const result = draftFromEditor("make this button blue");
+		expect(result).toEqual({ ok: true, mode: "default", prompt: "make this button blue" });
+	});
+
+	test("bare /refine with no body is empty", () => {
+		const result = draftFromEditor("/refine\n");
+		expect(result).toEqual({ ok: true, mode: "default", prompt: "" });
 	});
 });
 

@@ -1,6 +1,6 @@
 import type { ContextPacket, ContextTurn, ProjectSnippet } from "./types.ts";
 
-const PATH_RE = /(?:\.{0,2}\/)?[\w.-]+(?:\/[\w.-]+)+\.[A-Za-z][\w.-]*/g;
+const PATH_RE = /(?:\.{0,2}\/)?[\w.-]+(?:\/[\w.-]+)*\.[A-Za-z][A-Za-z0-9.-]{1,}/g;
 const SKILL_RE = /\/skill:[\w-]+/g;
 const TICK_RE = /`([^`]+)`/g;
 const QUOTE_RE = /"([^"]+)"/g;

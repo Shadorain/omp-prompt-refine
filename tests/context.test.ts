@@ -72,4 +72,13 @@ describe("extractAnchors / missingAnchors", () => {
 		expect(missing).toContain("src/payments/ledger.ts");
 		expect(missing).toContain("/skill:systematic-debugging");
 	});
+
+	test("treats top-level files as anchors", () => {
+		const draft = "Update package.json and CLAUDE.md";
+		expect(extractAnchors(draft)).toEqual(expect.arrayContaining(["package.json", "CLAUDE.md"]));
+		expect(missingAnchors(draft, "Update the package manifest.")).toEqual(
+			expect.arrayContaining(["package.json", "CLAUDE.md"]),
+		);
+		expect(missingAnchors(draft, "Update package.json and CLAUDE.md")).toEqual([]);
+	});
 });
