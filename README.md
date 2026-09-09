@@ -6,6 +6,8 @@ The result goes back in the editor. You still hit send.
 
 A one-liner stays a one-liner. A vague or overloaded ask gets clearer intent with limited context, fewer holes, and language an agent can actually follow.
 
+![/refine --deep](docs/demo.gif)
+
 ## Install
 
 OMP `v18.*`+
