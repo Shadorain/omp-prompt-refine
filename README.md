@@ -45,6 +45,7 @@ Don't submit `/refine` as the only line. That clears the editor. Shortcut or two
 /refine --model @slow   this run only
 /refine --no-context    skip chat and project files
 /refine --last          previous user message
+/refine --interview     ask a few questions, then rewrite
 /refine --undo          restore pre-Apply draft
 /refine --setup         default models and extra files
 ```

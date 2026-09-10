@@ -69,13 +69,25 @@ export function lastAssistantText(messages: Array<{ role?: string; content?: unk
 		const content = message.content;
 		if (typeof content === "string") return content;
 		if (!Array.isArray(content)) continue;
-		const parts: string[] = [];
+		const texts: string[] = [];
+		const thinking: string[] = [];
 		for (const block of content) {
 			if (!block || typeof block !== "object") continue;
-			const record = block as { type?: string; text?: string };
-			if (record.type === "text" && typeof record.text === "string") parts.push(record.text);
+			if ("type" in block && block.type === "text" && "text" in block && typeof block.text === "string") {
+				texts.push(block.text);
+				continue;
+			}
+			if (
+				"type" in block &&
+				block.type === "thinking" &&
+				"thinking" in block &&
+				typeof block.thinking === "string"
+			) {
+				thinking.push(block.thinking);
+			}
 		}
-		if (parts.length > 0) return parts.join("");
+		if (texts.length > 0) return texts.join("");
+		if (thinking.length > 0) return thinking.join("");
 	}
 	return "";
 }

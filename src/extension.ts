@@ -4,6 +4,7 @@ import type { ExtensionAPI, ExtensionContext } from "@oh-my-pi/pi-coding-agent";
 import { draftFromEditor, parseRefineArgs, refineArgumentCompletions } from "./commands.ts";
 import { contextFileNames, readRefineConfig, refineConfigPath, writeRefineConfig } from "./config.ts";
 import { buildContextPacket, lastUserDraft } from "./context.ts";
+import { formatInterviewAnswers, proposeInterviewQuestions } from "./interview.ts";
 import { resolveCriticModel, resolveRefinerModel } from "./models.ts";
 import { pickSingleLabel } from "./picker.ts";
 import { compilePrompt } from "./refine.ts";
@@ -55,6 +56,7 @@ export default function promptRefinerExtension(pi: ExtensionAPI) {
 		let model = parsed.model;
 		let noContext = parsed.noContext === true;
 		let last = parsed.last === true;
+		let interview = parsed.interview === true;
 		if (!draft && !last) {
 			const peeled = draftFromEditor(original);
 			if (!peeled.ok) {
@@ -75,6 +77,7 @@ export default function promptRefinerExtension(pi: ExtensionAPI) {
 				model = peeled.model;
 				noContext = peeled.noContext === true;
 				last = peeled.last === true;
+				interview = peeled.interview === true;
 			}
 		}
 		if (last) {
@@ -112,16 +115,37 @@ export default function promptRefinerExtension(pi: ExtensionAPI) {
 						gitBranch: await gitBranch(pi, ctx.cwd),
 						projectSnippets: readProjectSnippets(ctx.cwd, contextFileNames(config.extraContextFiles)),
 					});
+			const run = (request: IsolatedRunRequest) => infer(pi, ctx, { ...request, signal: cancel.signal });
+			if (interview) {
+				if (typeof ctx.ui.askDialog !== "function") {
+					throw new Error("Interview needs the interactive ask dialog.");
+				}
+				const questions = await proposeInterviewQuestions({
+					draft,
+					packet,
+					model: compiler.model,
+					run,
+				});
+				if (cancel.signal.aborted) throw new RefineCancelledError();
+				if (questions.length > 0) {
+					stopRefineProgress(ctx.ui);
+					const asked = await ctx.ui.askDialog(questions, { signal: cancel.signal });
+					startRefineProgress(ctx.ui);
+					if (!asked || asked.kind !== "submit") throw new RefineCancelledError();
+					packet.interview = formatInterviewAnswers(asked.results);
+				}
+			}
 			const result = await compilePrompt({
 				mode,
 				draft,
 				packet,
 				compiler,
 				critic: mode === "deep" ? resolveCriticModel(ctx.models, compiler.model, config.criticModel) : undefined,
-				run: (request) => infer(pi, ctx, { ...request, signal: cancel.signal }),
+				run,
 			});
 			if (cancel.signal.aborted) throw new RefineCancelledError();
 			stopRefineProgress(ctx.ui);
+			detachCancel();
 			await presentRefineResult(ctx, result, compiler.source, rememberOriginal);
 		} catch (error) {
 			if (ctx.ui.getEditorText() !== original) ctx.ui.setEditorText(original);

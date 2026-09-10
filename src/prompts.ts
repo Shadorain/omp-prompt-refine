@@ -33,6 +33,9 @@ Anti-workaround check: ask how a capable agent could technically satisfy the pro
 
 Completion criteria, when the task is substantial, must be objective (search shows X is gone, tests pass, named verification ran). Keep them proportional.
 
+Interview answers in the packet, if present, are explicit user decisions. Honor them. Do not reopen settled choices.
+
+
 Return ONLY JSON:
 {"prompt":"<the refined prompt the user will send>","notes":["short bullet of a meaningful change"]}
 
@@ -79,4 +82,23 @@ List how a capable implementation, research, or writing agent could:
 Be concrete and brief. Do not write the refined prompt.
 Do not invent extra product requirements.
 Output plain text, not JSON.`;
+}
+
+export function interviewerSystemPrompt(): string {
+	return `You write interview questions for a later prompt compiler.
+
+Return ONLY JSON:
+{"questions":[{"id":"done","question":"...","options":[{"label":"...","description":"..."}],"recommended":0}]}
+
+0 questions if the draft already has a clear end state, scope, and output shape.
+Otherwise 2-5 questions. Ask only what is missing. Priority:
+1. what done looks like
+2. scope / non-goals
+3. a constraint and why it exists
+4. output shape
+
+Each question needs 2-4 concrete options that are real forks, plus recommended (0-based).
+Do not ask for a persona or role.
+Do not ask anything already answered in the draft.
+Do not write the refined prompt.`;
 }

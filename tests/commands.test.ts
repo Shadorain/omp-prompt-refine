@@ -113,6 +113,15 @@ describe("parseRefineArgs", () => {
 		const result = parseRefineArgs("--undo --light");
 		expect(result.ok).toBe(false);
 	});
+
+	test("parses --interview with --deep", () => {
+		const result = parseRefineArgs("--interview --deep fix login");
+		expect(result).toMatchObject({ ok: true, interview: true, mode: "deep", prompt: "fix login" });
+	});
+
+	test("rejects --interview with --undo", () => {
+		expect(parseRefineArgs("--interview --undo").ok).toBe(false);
+	});
 });
 
 describe("draftFromEditor", () => {
@@ -153,6 +162,7 @@ describe("refineArgumentCompletions", () => {
 			"--last",
 			"--undo",
 			"--setup",
+			"--interview",
 		]);
 		for (const item of items.slice(1)) {
 			expect(item.label).toContain(item.value);

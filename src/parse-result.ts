@@ -24,12 +24,19 @@ export function parseRefineResult(text: string): RefineResult {
 	return { prompt: record.prompt.trim(), notes };
 }
 
-function extractJson(text: string): string {
+export function extractJson(text: string): string {
 	const trimmed = text.trim();
 	const fenced = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i);
-	if (fenced) return fenced[1].trim();
-	const start = trimmed.indexOf("{");
-	const end = trimmed.lastIndexOf("}");
-	if (start >= 0 && end > start) return trimmed.slice(start, end + 1);
-	return trimmed;
+	const body = (fenced ? fenced[1].trim() : trimmed) || trimmed;
+	const arr = body.indexOf("[");
+	const obj = body.indexOf("{");
+	if (arr >= 0 && (obj < 0 || arr < obj)) {
+		const end = body.lastIndexOf("]");
+		if (end > arr) return body.slice(arr, end + 1);
+	}
+	if (obj >= 0) {
+		const end = body.lastIndexOf("}");
+		if (end > obj) return body.slice(obj, end + 1);
+	}
+	return body;
 }

@@ -70,6 +70,9 @@ export function formatContextPacket(packet: ContextPacket): string {
 	return [
 		"CURRENT USER DRAFT: authoritative",
 		`<draft>\n${packet.draft}\n</draft>`,
+		packet.interview
+			? `INTERVIEW ANSWERS: authoritative\n<interview>\n${packet.interview}\n</interview>`
+			: "",
 		"<context>",
 		"EXPLICIT USER INSTRUCTIONS FROM RECENT CONTEXT: authoritative when they constrain this draft",
 		"RECENT CONVERSATION: supporting context",
@@ -79,7 +82,9 @@ export function formatContextPacket(packet: ContextPacket): string {
 		recent ? `\n${recent}` : "\n(no recent conversation)",
 		project ? `\n${project}` : "",
 		"</context>",
-	].join("\n");
+	]
+		.filter((part) => part.length > 0)
+		.join("\n");
 }
 
 export function extractAnchors(text: string): string[] {

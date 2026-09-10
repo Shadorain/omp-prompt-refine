@@ -9,6 +9,7 @@ export type ParsedRefineArgs =
 			prompt: string;
 			noContext?: true;
 			last?: true;
+			interview?: true;
 	  }
 	| { ok: true; action: "undo" }
 	| { ok: true; action: "setup" }
@@ -21,7 +22,7 @@ export type ArgumentCompletion = {
 	hint?: string;
 };
 
-const FLAG_HELP = "Use --light, --deep, --model, --no-context, --last, --undo, or --setup.";
+const FLAG_HELP = "Use --light, --deep, --model, --no-context, --last, --undo, --setup, or --interview.";
 const ROLE_SUGGESTIONS = ["@prompt_refiner", "@prompt_critic"];
 
 const FLAG_OPTIONS: ArgumentCompletion[] = [
@@ -73,6 +74,12 @@ const FLAG_OPTIONS: ArgumentCompletion[] = [
 		description: "Pick default models and extra context files",
 		hint: "",
 	},
+	{
+		value: "--interview",
+		label: "--interview",
+		description: "Ask a few questions, then rewrite",
+		hint: " [prompt]",
+	},
 ];
 
 export function parseRefineArgs(args: string): ParsedRefineArgs {
@@ -83,6 +90,7 @@ export function parseRefineArgs(args: string): ParsedRefineArgs {
 	let last = false;
 	let undo = false;
 	let setup = false;
+	let interview = false;
 	let model: string | undefined;
 	const rest: string[] = [];
 
@@ -112,6 +120,10 @@ export function parseRefineArgs(args: string): ParsedRefineArgs {
 			setup = true;
 			continue;
 		}
+		if (token === "--interview") {
+			interview = true;
+			continue;
+		}
 		if (token === "--model") {
 			const value = tokens[i + 1];
 			if (!value || value.startsWith("--")) {
@@ -135,10 +147,10 @@ export function parseRefineArgs(args: string): ParsedRefineArgs {
 		rest.push(token);
 	}
 
-	if (undo && (setup || light || deep || last || noContext || model || rest.length > 0)) {
+	if (undo && (setup || light || deep || last || noContext || interview || model || rest.length > 0)) {
 		return { ok: false, error: "--undo cannot be combined with other flags or a prompt." };
 	}
-	if (setup && (undo || light || deep || last || noContext || model || rest.length > 0)) {
+	if (setup && (undo || light || deep || last || noContext || interview || model || rest.length > 0)) {
 		return { ok: false, error: "--setup cannot be combined with other flags or a prompt." };
 	}
 	if (undo) return { ok: true, action: "undo" };
@@ -158,6 +170,7 @@ export function parseRefineArgs(args: string): ParsedRefineArgs {
 	if (model) parsed.model = model;
 	if (noContext) parsed.noContext = true;
 	if (last) parsed.last = true;
+	if (interview) parsed.interview = true;
 	return parsed;
 }
 
@@ -178,6 +191,7 @@ export function draftFromEditor(text: string): ParsedRefineArgs {
 	if (parsed.model) result.model = parsed.model;
 	if (parsed.noContext) result.noContext = true;
 	if (parsed.last) result.last = true;
+	if (parsed.interview) result.interview = true;
 	return result;
 }
 

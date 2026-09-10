@@ -36,6 +36,7 @@ export interface ContextPacket {
 	gitBranch?: string;
 	recent: ContextTurn[];
 	project: ProjectSnippet[];
+	interview?: string;
 }
 
 export interface IsolatedRunRequest {
