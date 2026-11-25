@@ -10,7 +10,9 @@ A one-liner stays a one-liner. A vague or overloaded ask gets clearer intent wit
 
 ## Install
 
-OMP `v18.*`+
+OMP `v19.2.1`+
+
+Pickers and preview actions use OMP's keyboard decoder and selector bindings, including enhanced terminal key events. Row views explicitly request repaint after input.
 
 ```text
 /marketplace add Shadorain/omp-prompt-refine

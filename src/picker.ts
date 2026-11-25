@@ -1,4 +1,5 @@
-import type { KeybindingsManager, Theme } from "@oh-my-pi/pi-coding-agent";
+import type { ExtensionRows, ExtensionTheme, ExtensionUiHost, KeybindingsManager } from "@oh-my-pi/pi-coding-agent";
+import { decodeKey } from "@oh-my-pi/pi-tui/driver/input/keys";
 
 export interface PickOption {
 	label: string;
@@ -9,15 +10,11 @@ export type PickHost = {
 	ui: {
 		custom?: <T>(
 			factory: (
-				tui: unknown,
-				theme: Theme,
+				ui: ExtensionUiHost,
+				theme: ExtensionTheme,
 				keybindings: KeybindingsManager,
 				done: (result: T) => void,
-			) => {
-				render: (width: number) => readonly string[];
-				invalidate: () => void;
-				handleInput: (data: string) => void;
-			},
+			) => ExtensionRows,
 		) => Promise<T>;
 		select: (title: string, options: string[]) => Promise<string | undefined>;
 	};
@@ -39,43 +36,25 @@ export async function pickSingleLabel(
 	helpText: string,
 ): Promise<string | undefined> {
 	if (typeof ctx.ui.custom === "function") {
-		return ctx.ui.custom<string | undefined>((_tui, theme, keybindings, done) =>
-			singlePickComponent(title, options, helpText, theme, keybindings, done),
-		);
+		return ctx.ui.custom<string | undefined>((ui, theme, keybindings, done) => {
+			const view = singlePickComponent(title, options, helpText, theme, keybindings, done);
+			return { ...view, handleInput(data: string) { view.handleInput(data); ui.requestRender(); } };
+		});
 	}
 	return ctx.ui.select(title, options.map((option) => option.label));
 }
 
-function paint(theme: Theme, color: string, text: string): string {
+function paint(theme: ExtensionTheme, color: string, text: string): string {
 	if (typeof theme.fg !== "function") return text;
 	return theme.fg(color as "accent" | "dim" | "muted" | "success" | "error", text);
 }
 
-function isEnter(data: string, keybindings: KeybindingsManager): boolean {
-	return keybindings.matches(data, "tui.select.confirm") || data === "\n" || data === "\r";
-}
-
-function isSpace(data: string): boolean {
-	return data === " " || data === "space";
-}
-
-function isBackspace(data: string, keybindings: KeybindingsManager): boolean {
-	return keybindings.matches(data, "tui.select.cancel")
-		? false
-		: data === "\x7f" || data === "\b" || data === "backspace";
-}
-
-function printableChar(data: string): string | undefined {
-	if (data.length !== 1) return undefined;
-	if (data === " " || data < " " || data > "~") return undefined;
-	return data;
-}
 
 function singlePickComponent(
 	title: string,
 	options: PickOption[],
 	helpText: string,
-	theme: Theme,
+	theme: ExtensionTheme,
 	keybindings: KeybindingsManager,
 	done: (result: string | undefined) => void,
 ) {
@@ -112,34 +91,35 @@ function singlePickComponent(
 			if (rows.length === 0) lines.push(paint(theme, "dim", "  No matches"));
 			return lines;
 		},
-		invalidate() {},
 		handleInput(data: string) {
-			if (keybindings.matches(data, "tui.select.cancel")) {
+			const key = decodeKey(data, { kitty: true, backspaceIsCtrl: false });
+			if (!key || key.kind === "release") return;
+			if (keybindings.matches(key, "tui.select.cancel")) {
 				done(undefined);
 				return;
 			}
-			if (keybindings.matches(data, "tui.select.up") || data === "k") {
+			if (keybindings.matches(key, "tui.select.up") || key.id === "k") {
 				cursor -= 1;
 				clampCursor();
 				return;
 			}
-			if (keybindings.matches(data, "tui.select.down") || data === "j") {
+			if (keybindings.matches(key, "tui.select.down") || key.id === "j") {
 				cursor += 1;
 				clampCursor();
 				return;
 			}
-			if (isEnter(data, keybindings) || isSpace(data)) {
+			if (keybindings.matches(key, "tui.select.confirm") || key.id === "space") {
 				const option = visible()[cursor];
 				if (option) done(option.label);
 				return;
 			}
-			if (isBackspace(data, keybindings)) {
+			if (key.id === "backspace") {
 				query = query.slice(0, -1);
 				cursor = 0;
 				return;
 			}
-			const ch = printableChar(data);
-			if (ch) {
+			const ch = key.text;
+			if (ch && ch !== " " && ch >= " " && ch <= "~") {
 				query += ch;
 				cursor = 0;
 			}

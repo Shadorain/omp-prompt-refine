@@ -1,4 +1,5 @@
-import type { KeybindingsManager, Theme } from "@oh-my-pi/pi-coding-agent";
+import type { ExtensionRows, ExtensionTheme, ExtensionUiHost, KeybindingsManager } from "@oh-my-pi/pi-coding-agent";
+import { decodeKey } from "@oh-my-pi/pi-tui/driver/input/keys";
 import type { RefineResult } from "./types.ts";
 
 const PROGRESS_KEY = "prompt-refiner";
@@ -38,15 +39,11 @@ export interface RefineUi {
 	): Promise<string | undefined>;
 	custom?: <T>(
 		factory: (
-			tui: unknown,
-			theme: Theme,
+			ui: ExtensionUiHost,
+			theme: ExtensionTheme,
 			keybindings: KeybindingsManager,
 			done: (result: T) => void,
-		) => {
-			render: (width: number) => readonly string[];
-			invalidate: () => void;
-			handleInput: (data: string) => void;
-		},
+		) => ExtensionRows,
 		options?: { overlay?: boolean },
 	) => Promise<T>;
 	setStatus?(key: string, text: string | undefined): void;
@@ -56,9 +53,9 @@ export interface RefineUi {
 			| string[]
 			| undefined
 			| ((
-					tui: { requestRender: () => void },
-					theme: { fg: (color: string, text: string) => string },
-			  ) => { render: (width: number) => string[]; dispose?: () => void }),
+					ui: ExtensionUiHost,
+					theme: ExtensionTheme,
+			  ) => ExtensionRows),
 		options?: { placement?: "aboveEditor" | "belowEditor" },
 	): void;
 	onTerminalInput?(handler: (data: string) => { consume?: boolean } | undefined): () => void;
@@ -70,11 +67,8 @@ export interface PresentContext {
 }
 
 export function isRefineCancel(data: string): boolean {
-	if (data === "\x1b" || data === "\x03") return true;
-	if (data === "escape" || data === "esc" || data === "ctrl+c") return true;
-	if (data.startsWith("\x1b[27") && data.endsWith("u")) return true;
-	if (data.startsWith("\x1b[99;") && data.includes(";5") && data.endsWith("u")) return true;
-	return false;
+	const key = decodeKey(data, { kitty: true, backspaceIsCtrl: false });
+	return key !== null && key.kind !== "release" && (key.id === "escape" || key.id === "ctrl+c");
 }
 
 export function attachRefineCancel(ui: RefineUi, abort: () => void): () => void {
@@ -103,8 +97,8 @@ export function formatRefineProgressLine(
 export function startRefineProgress(ui: RefineUi): void {
 	ui.setWidget?.(
 		PROGRESS_KEY,
-		(tui, theme) => {
-			const timer = setInterval(() => tui.requestRender(), 80);
+		(ui, theme) => {
+			const timer = setInterval(() => ui.requestRender(), 80);
 			return {
 				render(_width: number) {
 					return [formatRefineProgressLine(Date.now(), (tone, text) => theme.fg(tone, text))];
@@ -205,7 +199,10 @@ async function choosePreviewAction(
 ): Promise<string | undefined> {
 	if (typeof ctx.ui.custom === "function") {
 		return ctx.ui.custom(
-			(_tui, theme, keybindings, done) => previewOverlay(result, source, theme, keybindings, done),
+			(ui, theme, keybindings, done) => {
+				const view = previewOverlay(result, source, theme, keybindings, done);
+				return { ...view, handleInput(data: string) { view.handleInput(data); ui.requestRender(); } };
+			},
 			{ overlay: true },
 		);
 	}
@@ -224,7 +221,7 @@ async function choosePreviewAction(
 function previewOverlay(
 	result: RefineResult,
 	source: string,
-	theme: Theme,
+	theme: ExtensionTheme,
 	keybindings: KeybindingsManager,
 	done: (result: string | undefined) => void,
 ) {
@@ -237,40 +234,36 @@ function previewOverlay(
 			clamp();
 			return renderPreviewPanel(result, source, theme, cursor, width);
 		},
-		invalidate() {},
 		handleInput(data: string) {
-			if (keybindings.matches(data, "tui.select.cancel") || isRefineCancel(data)) {
+			const key = decodeKey(data, { kitty: true, backspaceIsCtrl: false });
+			if (!key || key.kind === "release") return;
+			if (keybindings.matches(key, "tui.select.cancel") || key.id === "ctrl+c") {
 				done(undefined);
 				return;
 			}
-			if (keybindings.matches(data, "tui.select.up") || data === "k") {
+			if (keybindings.matches(key, "tui.select.up") || key.id === "k") {
 				cursor -= 1;
 				clamp();
 				return;
 			}
-			if (keybindings.matches(data, "tui.select.down") || data === "j") {
+			if (keybindings.matches(key, "tui.select.down") || key.id === "j") {
 				cursor += 1;
 				clamp();
 				return;
 			}
-			if (data === "a" || data === "A" || data === "1") {
+			if (key.text?.toLowerCase() === "a" || key.id === "1") {
 				done("Apply");
 				return;
 			}
-			if (data === "e" || data === "E" || data === "2") {
+			if (key.text?.toLowerCase() === "e" || key.id === "2") {
 				done("Edit");
 				return;
 			}
-			if (data === "c" || data === "C" || data === "3") {
+			if (key.text?.toLowerCase() === "c" || key.id === "3") {
 				done("Cancel");
 				return;
 			}
-			if (
-				keybindings.matches(data, "tui.select.confirm") ||
-				data === "\n" ||
-				data === "\r" ||
-				data === " "
-			) {
+			if (keybindings.matches(key, "tui.select.confirm") || key.id === "space") {
 				done(PREVIEW_ACTIONS[cursor]?.id);
 			}
 		},
@@ -280,7 +273,7 @@ function previewOverlay(
 function renderPreviewPanel(
 	result: RefineResult,
 	source: string,
-	theme: Theme,
+	theme: ExtensionTheme,
 	cursor: number,
 	width: number,
 ): string[] {
@@ -333,7 +326,7 @@ function wrapText(text: string, width: number): string[] {
 	return out.length > 0 ? out : [""];
 }
 
-function paint(theme: Theme, color: string, text: string): string {
+function paint(theme: ExtensionTheme, color: string, text: string): string {
 	if (typeof theme.fg !== "function") return text;
 	return theme.fg(color as "accent" | "dim" | "muted" | "success" | "error" | "text", text);
 }
@@ -348,27 +341,27 @@ function padVisible(text: string, width: number): string {
 	return `${text}${" ".repeat(width - vis)}`;
 }
 
-function boxTop(title: string, width: number, theme: Theme): string {
+function boxTop(title: string, width: number, theme: ExtensionTheme): string {
 	const label = `─ ${title} `;
 	const fill = Math.max(0, width - 2 - visibleWidth(label));
 	return paint(theme, "accent", `╭${label}${"─".repeat(fill)}╮`);
 }
 
-function boxBottom(width: number, theme: Theme): string {
+function boxBottom(width: number, theme: ExtensionTheme): string {
 	return paint(theme, "accent", `╰${"─".repeat(Math.max(0, width - 2))}╯`);
 }
 
-function boxDivider(width: number, theme: Theme): string {
+function boxDivider(width: number, theme: ExtensionTheme): string {
 	return paint(theme, "accent", `├${"─".repeat(Math.max(0, width - 2))}┤`);
 }
 
-function boxRow(text: string, width: number, theme: Theme, tone?: string): string {
+function boxRow(text: string, width: number, theme: ExtensionTheme, tone?: string): string {
 	const inner = padVisible(text, width - 4);
 	const body = tone ? paint(theme, tone, inner) : inner;
 	return boxRowRaw(body, width, theme);
 }
 
-function boxRowRaw(innerPainted: string, width: number, theme: Theme): string {
+function boxRowRaw(innerPainted: string, width: number, theme: ExtensionTheme): string {
 	const padded = padVisible(innerPainted, width - 4);
 	return `${paint(theme, "accent", "│")} ${padded} ${paint(theme, "accent", "│")}`;
 }

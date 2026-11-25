@@ -38,9 +38,10 @@
     "test": "bun test"
   },
   "peerDependencies": {
-    "@oh-my-pi/pi-coding-agent": ">=18.0.0"
+    "@oh-my-pi/pi-coding-agent": ">=19.2.1"
   },
   "devDependencies": {
+    "@oh-my-pi/pi-coding-agent": "19.2.1",
     "@types/bun": "^1.2.0"
   }
 }
